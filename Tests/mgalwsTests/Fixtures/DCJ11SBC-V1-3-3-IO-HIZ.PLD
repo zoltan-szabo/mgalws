@@ -9,6 +9,12 @@ Location  None;
 Device    G16V8;
 
 /*
+	LOCAL MODIFICATION by Zoltan Szabo (github.com/zoltan-szabo) of
+	Peter Schranz's original V1.3.2 decoder — NOT part of the original
+	5volts.ch distribution. Pin 18 (!IO) is forced into permanent
+	high impedance so the Multi IO card can drive the !IO net while
+	schematic and PCB stay unchanged. Not yet tested in hardware.
+
 	Decoder GAL for the DCJ11 SBC V1.3.2
 
 	This GAL replaces the six TTL logic ICs normally used

@@ -3,9 +3,10 @@ import Testing
 @testable import mgalwsCore
 
 // Fixture fuse maps are from Peter Schranz's DCJ11 SBC project
-// (https://www.5volts.ch/pages/dcj11sbc/) — see Fixtures/README.md.
-// Expected values below were verified against the original WinCUPL .PLD
-// sources and by fuse-level analysis of the shipped JEDs.
+// (https://www.5volts.ch/pages/dcj11sbc/), except DCJ11SBC-V1-3-3-IO-HIZ.PLD,
+// a local modification — see Fixtures/README.md. Expected values below
+// were verified against the original WinCUPL .PLD sources and by
+// fuse-level analysis of the shipped JEDs.
 
 func fixture(_ name: String) throws -> JEDECFile {
     let url = Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: "jed")!
@@ -23,14 +24,6 @@ func fixture(_ name: String) throws -> JEDECFile {
         }
     }
 
-    @Test func parsesGALasm16V8() throws {
-        let jed = try fixture("DCJ11SBC-V1-3-3-galasm")
-        #expect(jed.fuseCount == 2194)
-        if let declared = jed.declaredFuseChecksum {
-            #expect(jed.computedFuseChecksum == declared)
-        }
-    }
-
     @Test func parsesWinCUPL22V10() throws {
         let jed = try fixture("DCJ11SBC-W65C22S")
         #expect(jed.fuseCount == 5892)
@@ -40,7 +33,7 @@ func fixture(_ name: String) throws -> JEDECFile {
     }
 
     @Test func serializeRoundTrip() throws {
-        for name in ["DCJ11SBC-V1-3-2", "DCJ11SBC-V1-3-3-galasm", "DCJ11SBC-W65C22S"] {
+        for name in ["DCJ11SBC-V1-3-2", "DCJ11SBC-W65C22S"] {
             let original = try fixture(name)
             let reparsed = try JEDECFile.parse(original.serialized())
             #expect(reparsed.fuses == original.fuses, "round trip failed for \(name)")
@@ -60,11 +53,6 @@ func fixture(_ name: String) throws -> JEDECFile {
         #expect(d.mode == .simple)
     }
 
-    @Test func galasmIsComplexMode() throws {
-        let d = try GAL16V8.decode(try fixture("DCJ11SBC-V1-3-3-galasm"))
-        #expect(d.mode == .complex)
-    }
-
     @Test func v132PinIOEquation() throws {
         // V1-3-2 drives !IO (pin 18) for the whole I/O page: IO = LBS1 & !LBS0
         let d = try GAL16V8.decode(try fixture("DCJ11SBC-V1-3-2"))
@@ -72,17 +60,6 @@ func fixture(_ name: String) throws -> JEDECFile {
         let io = try #require(d.olmc(pin: 18))
         #expect(io.kind == .simpleOutput)
         #expect(io.activeHigh == false)
-        #expect(namer.render(io.logic) == "!LBS0 & LBS1")
-    }
-
-    @Test func galasmTriStatesPin18() throws {
-        // V1-3-3: same logic, but pin 18's OE term is constant false.
-        let d = try GAL16V8.decode(try fixture("DCJ11SBC-V1-3-3-galasm"))
-        let io = try #require(d.olmc(pin: 18))
-        #expect(io.kind == .combinatorialIO)
-        #expect(io.outputEnable.isConstantFalse)
-        // The documentation-only logic term is still present and unchanged.
-        let namer = d.namer(pinNames: Self.pinNames)
         #expect(namer.render(io.logic) == "!LBS0 & LBS1")
     }
 
@@ -96,21 +73,21 @@ func fixture(_ name: String) throws -> JEDECFile {
 }
 
 @Suite struct GAL16V8Diffing {
-    @Test func v132VersusGalasm() throws {
-        // Two compilers, two OLMC modes — functionally identical on every
-        // output; the only behavioral difference is pin 18's OE.
-        let diff = try FuseDiff.gal16v8(
-            try fixture("DCJ11SBC-V1-3-2"),
-            try fixture("DCJ11SBC-V1-3-3-galasm"))
-        #expect(!diff.isIdentical)
-        for pin in diff.pins {
+    @Test func winCUPLGoldenVersusCompiledV133() throws {
+        // Cross-compiler, cross-mode diff: the WinCUPL-built V1-3-2 (simple
+        // mode, runs in real hardware) against mgalws-compiled V1-3-3
+        // (complex mode, local tri-state modification). Everything must be
+        // equivalent except pin 18 (tri-stated OE; logic is don't-care
+        // behind a disabled driver).
+        let compiled = try PLDCompiler.compile(
+            try fixtureText("DCJ11SBC-V1-3-3-IO-HIZ", ext: "PLD")).jed
+        let diff = try FuseDiff.gal16v8(try fixture("DCJ11SBC-V1-3-2"), compiled)
+        for pin in diff.pins where pin.pin != 18 {
             #expect(pin.logicEquivalent, "pin \(pin.pin) logic should be equivalent")
-            if pin.pin == 18 {
-                #expect(!pin.oeEquivalent, "pin 18 OE must differ (tri-state fix)")
-            } else {
-                #expect(pin.oeEquivalent, "pin \(pin.pin) OE should be equivalent")
-            }
+            #expect(pin.oeEquivalent, "pin \(pin.pin) OE should be equivalent")
         }
+        let pin18 = try #require(diff.pins.first { $0.pin == 18 })
+        #expect(!pin18.oeEquivalent, "pin 18 OE must differ (tri-state modification)")
         #expect(!diff.isFunctionallyEquivalent)
     }
 

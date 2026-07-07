@@ -3,6 +3,17 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Fixture corrections (2026-07-08)
+
+DCJ11SBC-V1-3-3-IO-HIZ.PLD (previously named DCJ11SBC-V1-3-3.PLD) is a
+local modification by Zoltan Szabo, not an original 5volts.ch file: it
+holds pin 18 (!IO) in permanent high impedance (IO.OE = 'b'0) so an
+expansion card can drive the !IO net with unchanged schematic and PCB.
+The GALasm-built JED of that modification was never tested in hardware
+and has been removed from the fixtures; the tests now validate the
+compiled output's pin-18 behaviour and its equivalence to the
+WinCUPL-built V1-3-2 golden image on all other pins.
+
 ## Milestone 2 — CUPL equation compiler (2026-07-07)
 
 `mgalws compile file.pld [out.jed]` compiles a CUPL subset to a GAL16V8
@@ -17,19 +28,19 @@ fuse map:
   with), active-low signal-to-column polarity mapping, product-term
   capacity checks, XOR/AC0/AC1/PTD/SYN configuration.
 
-Golden tests compile Peter Schranz's DCJ11 SBC decoder sources (V1-3-2
-and V1-3-3) and prove functional equivalence with the WinCUPL 5.0a and
-GALasm 2.1 fuse maps that run in real hardware. The compiled V1-3-2
-differs from WinCUPL's output only in signature fuses and term
-minimization choices; `mgalws diff` reports every pin equivalent.
+Golden tests compile Peter Schranz's DCJ11 SBC decoder source (V1-3-2)
+and prove functional equivalence with the WinCUPL 5.0a fuse map that
+runs in real hardware; the compiled output differs only in signature
+fuses and term minimization choices. The V1-3-3-IO-HIZ local
+modification exercises .OE support and complex-mode fitting.
 
 ## Milestone 1 — JEDEC toolkit (2026-07-07)
 
 `mgalws decode file.jed` and `mgalws diff a.jed b.jed`:
 
 - JESD3 parser/serializer: `*QF/*QP/*F/*L/*C` fields, STX/ETX framing,
-  CRLF tolerance, LSB-first fuse checksum verified against WinCUPL's and
-  GALasm's declared values.
+  CRLF tolerance, LSB-first fuse checksum verified against WinCUPL's
+  declared values.
 - GAL16V8 decoder: all three modes (registered/complex/simple),
   mode-dependent column routing for pins 1/11, AC1/XOR/PTD handling.
 - GAL22V10 decoder: variable 8-16 term groups, AR/SP rows, per-OLMC
