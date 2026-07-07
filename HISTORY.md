@@ -3,6 +3,20 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Hardware falsification: complex-mode tri-state (2026-07-08)
+
+First silicon test of the complex-mode pin-18 tri-state image
+(IO.OE = 'b'0): a fresh GAL16V8D programmed with it does not work in
+the SBC, although the fuse map is equivalent to the (also never
+tested) GALasm build of the same design. Lesson: the complex-mode
+model was only ever validated against GALasm output, i.e. circularly.
+Complex-mode support is therefore flagged hardware-unvalidated.
+
+The replacement approach works and is hardware-verified: stay in
+simple mode and omit the IO output entirely, making pin 18's OLMC a
+dedicated input (one AC1 fuse plus a cleared row versus the proven
+WinCUPL image). Fixture: DCJ11SBC-V1-3-2-IO-INPUT.PLD.
+
 ## JED framing fix (2026-07-08)
 
 First real-world programming attempt: minipro rejected mgalws output

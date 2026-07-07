@@ -15,12 +15,18 @@ reader and GAL decoders:
 | `DCJ11SBC-W65C22S-EXPLICIT.PLD` | CUPL source | Multi IO glue with the SEQUENCE state machine rewritten as explicit .D equations (derived for mgalws testing) |
 | `DCJ11SBC-W65C22S.PLD` | CUPL source | Original Multi IO glue logic, golden input for FIELD/SEQUENCE support |
 
-`DCJ11SBC-V1-3-3-IO-HIZ.PLD` is a local modification by Zoltan Szabo
-(github.com/zoltan-szabo), not part of the original 5volts.ch distribution:
-it holds pin 18 (`!IO`) in permanent high impedance via `IO.OE = 'b'0` so
-that an expansion card can drive the `!IO` net. It exercises the `.OE`
-extension and complex-mode fitting in the compiler tests. It has not been
-tested in hardware.
+`DCJ11SBC-V1-3-3-IO-HIZ.PLD` and `DCJ11SBC-V1-3-2-IO-INPUT.PLD` are local
+modifications by Zoltan Szabo (github.com/zoltan-szabo), not part of the
+original 5volts.ch distribution. Both aim to free pin 18 (`!IO`) so an
+expansion card can drive that net:
+
+- IO-HIZ uses `IO.OE = 'b'0`, which forces the whole device into complex
+  mode. **Hardware test 2026-07-08: does not work in the SBC** (the
+  equivalent GALasm-built image was never hardware-tested either). Kept
+  as a compiler test for `.OE`/complex-mode fitting.
+- IO-INPUT simply omits the IO output, so the device stays in the proven
+  simple mode and pin 18's OLMC becomes a dedicated input.
+  **Hardware-verified working 2026-07-08.**
 
 The V1-3-2 / V1-3-3 pair remains a useful test case: two OLMC modes,
 functionally identical logic on every output except one intentionally

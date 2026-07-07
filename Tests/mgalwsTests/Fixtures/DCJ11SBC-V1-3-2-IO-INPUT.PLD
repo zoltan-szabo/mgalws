@@ -1,7 +1,7 @@
 	Name      DCJ11 SBC Decoder;
 Partno    GAL;
-Date      23/06/2026;
-Rev       1.3.3;
+Date      13/04/2025;
+Rev       1.3.2;
 Designer  cbscpe;
 Company   Netzwerk & Design GmbH;
 Assembly  None;
@@ -10,19 +10,16 @@ Device    G16V8;
 
 /*
 	LOCAL MODIFICATION by Zoltan Szabo (github.com/zoltan-szabo) of
-	Peter Schranz's original V1.3.2 decoder — NOT part of the original
-	5volts.ch distribution. Pin 18 (!IO) is forced into permanent
-	high impedance so the Multi IO card can drive the !IO net while
-	schematic and PCB stay unchanged.
-
-	HARDWARE TEST 2026-07-08: DOES NOT WORK. The complex-mode image
-	(matching a GALasm build of the same design) fails in the SBC;
-	the proven alternative is DCJ11SBC-V1-3-2-IO-INPUT.PLD, which
-	stays in simple mode and configures pin 18 as an input. Kept as
-	a compiler test case for .OE / complex-mode fitting only.
-
+	Peter Schranz's original V1.3.2 decoder. Pin 18 (!IO) is simply
+	omitted: in simple mode an unused OLMC becomes a dedicated input
+	with no output buffer, so the pin is high impedance and the
+	Multi IO card can drive the !IO net. Unlike the earlier complex-mode
+	IO.OE approach, every other pin keeps the exact configuration of
+	the proven V1-3-2 image.
+ */
+/*
 	Decoder GAL for the DCJ11 SBC V1.3.2
-
+	
 	This GAL replaces the six TTL logic ICs normally used
 	to decode the minimal signals on the SBC. But to make
 	things simpler a GAL has been fitted to the PCB. You
@@ -31,7 +28,7 @@ Device    G16V8;
 	parallel. The TTL logic ICs still exist for those who
 	want to build the SBC but have no access to a GAL or
 	GAL programmer.
-
+	
 	GALs are no longer produced, only Microchip produces
 	pin replaceable EEPLDs. There are some major differences
 	between those EEPLDs and GALs. EEPLDs support only about
@@ -39,7 +36,7 @@ Device    G16V8;
 	Second the programming algorithm for the EEPLDs is not
 	documented and I suppose the programmers that support
 	the EEPLDs are using reverse engineered algorithms.
-
+	
 	To compile this PLD design file I use a batch file that
 	invokes the command line tools that come with WinCUPL.
 
@@ -68,24 +65,12 @@ PIN        14 = !CONT;
 PIN        15 = !WEL;
 PIN        16 = !WEU;
 PIN        17 = !CE;
-PIN        18 = !IO;
 PIN        19 = !GPREAD;
 
 OE            =  LAIO3 &  LAIO2 & !LAIO1 & !LAIO0          &  BUFCTL
               #  LAIO3 & !LAIO2                            &  BUFCTL;
-
+          
 CE            = !LBS1  & !LBS0;
-
-/*
-	Pin 18 (IO) is no longer driven by this GAL. The signal is now
-	driven externally by another device, so this output is forced
-	into permanent high-impedance (tri-state) to avoid bus contention.
-	The .OE product term is held at constant 0, so the output buffer
-	never turns on. The IO logic term below is kept for documentation
-	only and never reaches the pin.
- */
-IO            =  'b'0;
-IO.OE         =  'b'0;
 
 WEL           = !LAIO3 & !LAIO2 & !LAIO1                   & !BUFCTL &  SCTL
               # !LAIO3 & !LAIO2 &  LAIO1          & !A0    & !BUFCTL &  SCTL;
@@ -98,7 +83,7 @@ GPREAD        =  LAIO3 &  LAIO2 &  LAIO1 & !LAIO0          &  BUFCTL;
 /*
 	Assert !MISS only for non-existant RAM, this will shorten the
 	memory read cycles to 4 clock cycles and make the DCJ11 think
-	that these are cache hits. You need to install RAM with an
+	that these are cache hits. You need to install RAM with an 
 	access time of 70ns or less.
  */
 
@@ -107,17 +92,19 @@ MISS          = !LBS1 & !LBS0 &  NXM;
 /*
 	Modify !CONT to stretch the CPU cycles for writes to external
 	IO registers so that the write impulse for the DC319 or CDP6402
-	is increased to match the requiremenets even for clock rates
+	is increased to match the requiremenets even for clock rates 
 	above 10MHz. By delaying CONT with SCTL for writes to external
-	IO registers the write pulse will be increased from 1 to 3
-	clock cycles.
+	IO registers the write pulse will be increased from 1 to 3 
+	clock cycles. 
 
 	For memory access we also have to assert CONT as read-modify-write
 	memory cycles use a stretched read cycle.
  */
-
+ 
  CONT          = !LBS1 & !LBS0 & !NXM
                # !LBS1 & !LBS0 &  NXM &  SCTL
                # !LBS1 &  LBS0
                #  LBS1 & !LBS0        &  SCTL
                #  LBS1 &  LBS0;
+
+

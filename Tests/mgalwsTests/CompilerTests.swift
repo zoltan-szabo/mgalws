@@ -117,6 +117,23 @@ func fixtureText(_ name: String, ext: String) throws -> String {
     }
 }
 
+@Suite struct IOInputVariant {
+    @Test func pin18BecomesInput() throws {
+        // Hardware-verified 2026-07-08: simple mode, pin 18 as input.
+        let compiled = try PLDCompiler.compile(
+            try fixtureText("DCJ11SBC-V1-3-2-IO-INPUT", ext: "PLD"))
+        let d = try GAL16V8.decode(compiled.jed)
+        #expect(d.mode == .simple)
+        let io = try #require(d.olmc(pin: 18))
+        #expect(io.kind == .input)
+        // All other pins equivalent to the proven WinCUPL image.
+        let diff = try FuseDiff.gal16v8(compiled.jed, try fixture("DCJ11SBC-V1-3-2"))
+        for pin in diff.pins where pin.pin != 18 {
+            #expect(pin.logicEquivalent && pin.oeEquivalent, "pin \(pin.pin)")
+        }
+    }
+}
+
 @Suite struct FitterErrors {
     @Test func rejectsUnknownDevice() {
         let src = "Device G20V8; PIN 2 = A; PIN 19 = Q; Q = A;"

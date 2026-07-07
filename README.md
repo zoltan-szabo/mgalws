@@ -16,7 +16,10 @@ Early development. Roadmap:
 1. **JED toolkit** (done) — read, write, decode, and diff JEDEC fuse maps;
    decode GAL16V8/22V10 macrocell configuration back to equations
 2. **Equation compiler** (done) — CUPL-subset combinational equations to
-   GAL16V8 fuse map, golden-tested against WinCUPL and GALasm output
+   GAL16V8 fuse map, golden-tested against WinCUPL output. Note: GAL16V8
+   simple mode is hardware-verified; complex mode (.OE) compiles to
+   GALasm-equivalent fuse maps but failed its first in-circuit test and
+   is considered unvalidated on real silicon
 3. **Registered outputs** (done) — `.d`/`.oe`/`.ar`/`.sp` extensions and a
    GAL22V10 fitter, golden-tested against the Multi IO card's WinCUPL image
 4. **State machines** (done) — CUPL `FIELD` and `SEQUENCE` (with IF/NEXT/
