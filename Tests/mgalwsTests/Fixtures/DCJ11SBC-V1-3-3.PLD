@@ -1,0 +1,111 @@
+	Name      DCJ11 SBC Decoder;
+Partno    GAL;
+Date      23/06/2026;
+Rev       1.3.3;
+Designer  cbscpe;
+Company   Netzwerk & Design GmbH;
+Assembly  None;
+Location  None;
+Device    G16V8;
+
+/*
+	Decoder GAL for the DCJ11 SBC V1.3.2
+
+	This GAL replaces the six TTL logic ICs normally used
+	to decode the minimal signals on the SBC. But to make
+	things simpler a GAL has been fitted to the PCB. You
+	either install the six TTL logic ICs or the GAL but
+	never both at the same time as they are connected in
+	parallel. The TTL logic ICs still exist for those who
+	want to build the SBC but have no access to a GAL or
+	GAL programmer.
+
+	GALs are no longer produced, only Microchip produces
+	pin replaceable EEPLDs. There are some major differences
+	between those EEPLDs and GALs. EEPLDs support only about
+	hundred erase cycles, where as GALs support thousands.
+	Second the programming algorithm for the EEPLDs is not
+	documented and I suppose the programmers that support
+	the EEPLDs are using reverse engineered algorithms.
+
+	To compile this PLD design file I use a batch file that
+	invokes the command line tools that come with WinCUPL.
+
+	.\cupl.bat Z:\DCJ11SBC\DCJ11SBC-V1-3-2.PLD
+
+	To program the GAL I use a T48 programmer from XGecu
+	and the open source program minipro which runs on Linux
+	and macOS.
+
+	minipro -p GAL16V8D -w DCJ11SBC-V1-3-2.jed
+ */
+PIN         1 =  LAIO3;
+PIN         2 =  LAIO2;
+PIN         3 =  LAIO1;
+PIN         4 =  LAIO0;
+PIN         5 =  LBS0;
+PIN         6 =  LBS1;
+PIN         7 = !SCTL;
+PIN         8 = !BUFCTL;
+PIN         9 =  A0;
+PIN        11 =  NXM;
+
+PIN        12 = !OE;
+PIN        13 = !MISS;
+PIN        14 = !CONT;
+PIN        15 = !WEL;
+PIN        16 = !WEU;
+PIN        17 = !CE;
+PIN        18 = !IO;
+PIN        19 = !GPREAD;
+
+OE            =  LAIO3 &  LAIO2 & !LAIO1 & !LAIO0          &  BUFCTL
+              #  LAIO3 & !LAIO2                            &  BUFCTL;
+
+CE            = !LBS1  & !LBS0;
+
+/*
+	Pin 18 (IO) is no longer driven by this GAL. The signal is now
+	driven externally by another device, so this output is forced
+	into permanent high-impedance (tri-state) to avoid bus contention.
+	The .OE product term is held at constant 0, so the output buffer
+	never turns on. The IO logic term below is kept for documentation
+	only and never reaches the pin.
+ */
+IO            =  'b'0;
+IO.OE         =  'b'0;
+
+WEL           = !LAIO3 & !LAIO2 & !LAIO1                   & !BUFCTL &  SCTL
+              # !LAIO3 & !LAIO2 &  LAIO1          & !A0    & !BUFCTL &  SCTL;
+
+WEU           = !LAIO3 & !LAIO2 & !LAIO1                   & !BUFCTL &  SCTL
+              # !LAIO3 & !LAIO2 &  LAIO1          &  A0    & !BUFCTL &  SCTL;
+
+GPREAD        =  LAIO3 &  LAIO2 &  LAIO1 & !LAIO0          &  BUFCTL;
+
+/*
+	Assert !MISS only for non-existant RAM, this will shorten the
+	memory read cycles to 4 clock cycles and make the DCJ11 think
+	that these are cache hits. You need to install RAM with an
+	access time of 70ns or less.
+ */
+
+MISS          = !LBS1 & !LBS0 &  NXM;
+
+/*
+	Modify !CONT to stretch the CPU cycles for writes to external
+	IO registers so that the write impulse for the DC319 or CDP6402
+	is increased to match the requiremenets even for clock rates
+	above 10MHz. By delaying CONT with SCTL for writes to external
+	IO registers the write pulse will be increased from 1 to 3
+	clock cycles.
+
+	For memory access we also have to assert CONT as read-modify-write
+	memory cycles use a stretched read cycle.
+ */
+
+ CONT          = !LBS1 & !LBS0 & !NXM
+               # !LBS1 & !LBS0 &  NXM &  SCTL
+               # !LBS1 &  LBS0
+               #  LBS1 & !LBS0        &  SCTL
+               #  LBS1 &  LBS0;

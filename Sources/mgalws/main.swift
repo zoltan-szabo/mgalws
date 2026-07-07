@@ -8,6 +8,7 @@ func usage() -> Never {
     mgalws — Mac GAL WorkShop
 
     USAGE:
+      mgalws compile <file.pld> [out.jed] Compile CUPL equations to a JEDEC fuse map
       mgalws decode <file.jed>            Decode a GAL16V8/22V10 fuse map to equations
       mgalws diff <a.jed> <b.jed>         Compare two fuse maps (fuse + functional level)
 
@@ -77,8 +78,25 @@ func diffCommand(_ pathA: String, _ pathB: String) {
     exit(diff.isFunctionallyEquivalent ? 0 : 1)
 }
 
+func compileCommand(_ path: String, output: String?) {
+    guard let text = try? String(contentsOfFile: path, encoding: .utf8) else {
+        print("error: cannot read \(path)"); exit(1)
+    }
+    do {
+        let compiled = try PLDCompiler.compile(text)
+        let outPath = output ?? path.replacingOccurrences(
+            of: "\\.[pP][lL][dD]$", with: "", options: .regularExpression) + ".jed"
+        try compiled.jed.serialized().write(toFile: outPath, atomically: true, encoding: .utf8)
+        print("\(compiled.deviceName): \(outPath)  (fuse checksum \(String(format: "%04X", compiled.jed.computedFuseChecksum)))")
+    } catch {
+        print("error: \(error)"); exit(1)
+    }
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 switch (args.first, args.count) {
+case ("compile", 2): compileCommand(args[1], output: nil)
+case ("compile", 3): compileCommand(args[1], output: args[2])
 case ("decode", 2): decodeCommand(args[1])
 case ("diff", 3): diffCommand(args[1], args[2])
 default: usage()

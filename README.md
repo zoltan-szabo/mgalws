@@ -13,11 +13,10 @@ DCJ-11 / PDP-11 hardware development on the
 
 Early development. Roadmap:
 
-1. **JED toolkit** ✔ — read, write, decode, and diff JEDEC fuse maps; decode
-   GAL16V8/22V10 macrocell configuration and product terms back to equations
-   (`mgalws decode file.jed`, `mgalws diff a.jed b.jed` — diff distinguishes
-   fuse-identical, functionally-equivalent, and genuinely different logic)
-2. **Equation compiler** — boolean equations to fuse map (GALasm parity)
+1. **JED toolkit** (done) — read, write, decode, and diff JEDEC fuse maps;
+   decode GAL16V8/22V10 macrocell configuration back to equations
+2. **Equation compiler** (done) — CUPL-subset combinational equations to
+   GAL16V8 fuse map, golden-tested against WinCUPL and GALasm output
 3. **Registered outputs** — `.d`/`.oe`/`.ar`/`.sp` extensions, GAL22V10 fitter
 4. **State machines** — CUPL `FIELD` / `SEQUENCE` / `TABLE` support
 5. **Verification** — exhaustive functional-equivalence checking between
