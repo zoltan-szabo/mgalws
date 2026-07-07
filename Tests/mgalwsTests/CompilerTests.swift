@@ -60,8 +60,8 @@ func fixtureText(_ name: String, ext: String) throws -> String {
         #expect(scrl?.number == 7)
     }
 
-    @Test func parsesV133WithOEExtension() throws {
-        let d = try PLDParser.parse(try fixtureText("DCJ11SBC-V1-3-3-IO-HIZ", ext: "PLD"))
+    @Test func parsesOEExtension() throws {
+        let d = try PLDParser.parse("Device G16V8; PIN 18 = !IO; IO = 'b'0; IO.OE = 'b'0;")
         #expect(d.equations.contains { $0.target == "IO" && $0.ext == "OE" })
         #expect(d.equations.contains { $0.target == "IO" && $0.ext == nil
                                        && $0.expr == .constant(false) })
@@ -86,11 +86,13 @@ func fixtureText(_ name: String, ext: String) throws -> String {
         #expect(diff.isFunctionallyEquivalent)
     }
 
-    @Test func v133TriStatesPin18() throws {
-        // V1-3-3 uses IO.OE = 'b'0 — must select complex mode and hold
-        // pin 18 permanently high impedance.
-        let compiled = try PLDCompiler.compile(try fixtureText("DCJ11SBC-V1-3-3-IO-HIZ", ext: "PLD"))
-        let decoded = try GAL16V8.decode(compiled.jed)
+    @Test func oeConstantFalseSelectsComplexMode() throws {
+        // .OE = 'b'0 selects complex mode with a never-true OE term.
+        // NOTE: encoding matches GALasm, but GAL16V8 complex mode failed
+        // its only in-circuit test (2026-07-08) and is considered
+        // unvalidated on real silicon — see HISTORY.md.
+        let src = "Device G16V8; PIN 2 = A; PIN 18 = !IO; PIN 19 = Q; Q = A; IO = 'b'0; IO.OE = 'b'0;"
+        let decoded = try GAL16V8.decode(try PLDCompiler.compile(src).jed)
         #expect(decoded.mode == .complex)
         let io = try #require(decoded.olmc(pin: 18))
         #expect(io.outputEnable.isConstantFalse)

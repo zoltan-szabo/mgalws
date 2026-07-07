@@ -86,21 +86,19 @@ func fixture(_ name: String) throws -> JEDECFile {
 }
 
 @Suite struct GAL16V8Diffing {
-    @Test func winCUPLGoldenVersusCompiledV133() throws {
-        // Cross-compiler, cross-mode diff: the WinCUPL-built V1-3-2 (simple
-        // mode, runs in real hardware) against mgalws-compiled V1-3-3
-        // (complex mode, local tri-state modification). Everything must be
-        // equivalent except pin 18 (tri-stated OE; logic is don't-care
-        // behind a disabled driver).
+    @Test func winCUPLGoldenVersusCompiledIOInput() throws {
+        // The WinCUPL-built V1-3-2 (runs in real hardware) against the
+        // mgalws-compiled IO-INPUT variant (also hardware-verified):
+        // everything equivalent except pin 18, which became an input.
         let compiled = try PLDCompiler.compile(
-            try fixtureText("DCJ11SBC-V1-3-3-IO-HIZ", ext: "PLD")).jed
+            try fixtureText("DCJ11SBC-V1-3-2-IO-INPUT", ext: "PLD")).jed
         let diff = try FuseDiff.gal16v8(try fixture("DCJ11SBC-V1-3-2"), compiled)
         for pin in diff.pins where pin.pin != 18 {
             #expect(pin.logicEquivalent, "pin \(pin.pin) logic should be equivalent")
             #expect(pin.oeEquivalent, "pin \(pin.pin) OE should be equivalent")
         }
         let pin18 = try #require(diff.pins.first { $0.pin == 18 })
-        #expect(!pin18.oeEquivalent, "pin 18 OE must differ (tri-state modification)")
+        #expect(!pin18.oeEquivalent, "pin 18 must differ (output removed)")
         #expect(!diff.isFunctionallyEquivalent)
     }
 

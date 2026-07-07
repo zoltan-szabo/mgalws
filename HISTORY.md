@@ -3,6 +3,16 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Fixture cleanup (2026-07-08)
+
+The SBC decoder fixtures are reduced to the two files that matter: the
+original V1-3-2 (source + WinCUPL build, runs in hardware) and the
+hardware-verified IO-INPUT modification (pin 18 as input, high
+impedance, driven externally by the Multi IO card). The falsified
+complex-mode IO-HIZ design was removed; .OE and complex-mode compiler
+features are now covered by inline test sources instead of a fixture
+that reads like a recommended design.
+
 ## Hardware falsification: complex-mode tri-state (2026-07-08)
 
 First silicon test of the complex-mode pin-18 tri-state image
