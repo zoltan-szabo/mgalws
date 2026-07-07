@@ -26,8 +26,11 @@ Early development. Roadmap:
    OUT/DEFAULT); Peter Schranz's original Multi IO glue PLD compiles
    unmodified to a fuse map equivalent to the hardware image. `TABLE`
    deferred until a design needs it
-5. **Verification** — exhaustive functional-equivalence checking between
-   compiled output and reference fuse maps; simulation vectors
+5. **Verification** (done) — functional-equivalence diffing (part of the
+   JED toolkit) plus cycle-level simulation: `mgalws sim design.pld
+   script.vec` drives a design through clocked vector scripts with
+   watch/set/clock/expect commands, covering registered state machines,
+   output enables and polarities before any chip is programmed
 
 ## Building
 

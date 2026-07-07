@@ -33,3 +33,4 @@ by inline test sources.
 | `DCJ11SBC-W65C22S.PLD` | Original glue-logic source with SEQUENCE state machine (Peter Schranz) |
 | `DCJ11SBC-W65C22S.jed` | WinCUPL build of it — runs in real hardware |
 | `DCJ11SBC-W65C22S-EXPLICIT.PLD` | Same design with the SEQUENCE rewritten as explicit .D equations (derived for mgalws testing by Zoltan Szabo) |
+| `W65C22S-statemachine.vec` | Sequential golden vectors for the state machine (written for mgalws by Zoltan Szabo) |

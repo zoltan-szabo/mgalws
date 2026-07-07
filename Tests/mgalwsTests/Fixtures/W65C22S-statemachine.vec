@@ -1,0 +1,45 @@
+# Sequential golden test for the Multi IO GAL22V10 glue (Peter Schranz,
+# https://www.5volts.ch/pages/dcj11sbc/), run against the WinCUPL fuse map.
+# Levels are pin voltages. STRB is active low: 1 = idle, 0 = bus cycle.
+
+watch PHI3 PHI2 PHI1 PHI0 VIAACT VIA DV
+
+# idle: no bus cycle, harmless address
+set STRB=1 A9=0 A10=0 A11=0 A12=0 LBS0=0 LBS1=0
+clock 2
+expect PHI3=0 PHI2=0 PHI1=0 PHI0=0 VIAACT=0 VIA=1 DV=1
+
+# stretched I/O cycle addressing the VIA range (174xxx: A12 A11 !A10 !A9)
+set STRB=0 A12=1 A11=1 A10=0 A9=0 LBS1=1 LBS0=0
+clock 1
+expect PHI3=0 PHI2=0 PHI1=0 PHI0=1 VIAACT=0 VIA=1 DV=0
+clock 1
+expect PHI1=1 PHI0=0 VIAACT=0
+clock 1
+expect PHI1=1 PHI0=1 VIAACT=0
+clock 1
+# state 4: VIAACT window opens - VIA selected, DV re-asserted
+expect PHI2=1 PHI1=0 PHI0=0 VIAACT=1 VIA=0 DV=1
+clock 1
+# state 5: window still open
+expect PHI2=1 PHI0=1 VIAACT=1 VIA=0 DV=1
+clock 1
+# state 6: window closed, DV drops (falling edge latches the CPU data)
+expect PHI2=1 PHI1=1 PHI0=0 VIAACT=0 VIA=1 DV=0
+clock 3
+# state 9
+expect PHI3=1 PHI2=0 PHI1=0 PHI0=1
+clock 1
+# parks 9 -> 8 while STRB stays asserted
+expect PHI3=1 PHI0=0
+clock 1
+expect PHI3=1 PHI0=1
+
+# bus cycle ends: machine resets to state 0
+set STRB=1
+clock 1
+expect PHI3=0 PHI2=0 PHI1=0 PHI0=0 VIAACT=0
+
+# console address 177xxx selects CON combinationally, not the VIA
+set A9=1 A10=1
+expect CON=0 VIA=1 DV=1

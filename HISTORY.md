@@ -3,6 +3,24 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Milestone 5 — cycle-level simulation (2026-07-08)
+
+`mgalws sim design.pld script.vec` simulates a compiled design against a
+line-oriented vector script (watch / set / clock / show / expect; levels
+are pin voltages, expectations accept 0/1/Z). The simulator executes
+decoded fuse maps directly: GAL22V10 with registered OLMCs (Q-bar
+feedback, AR/SP, power-up clear) and combinational fixed-point settling;
+GAL16V8 in simple/complex modes. This is the layer between "fuse maps
+are equivalent" and "works in circuit" that the complex-mode episode
+showed was missing — state machines can now be exercised cycle by cycle
+before a chip is programmed.
+
+Golden vectors: W65C22S-statemachine.vec drives the Multi IO glue
+through a full stretched bus cycle (count 0-9, park 8/9, STRB reset,
+VIAACT window at states 4-5, VIA select, DV falling edge, console
+decode) and passes against both the WinCUPL fuse map running in real
+hardware and the mgalws-compiled equivalent.
+
 ## Fixture cleanup (2026-07-08)
 
 The SBC decoder fixtures are reduced to the two files that matter: the

@@ -9,6 +9,7 @@ func usage() -> Never {
 
     USAGE:
       mgalws compile <file.pld> [out.jed] Compile CUPL equations to a JEDEC fuse map
+      mgalws sim <file.pld> <script.vec>  Simulate a design against a vector script
       mgalws decode <file.jed>            Decode a GAL16V8/22V10 fuse map to equations
       mgalws diff <a.jed> <b.jed>         Compare two fuse maps (fuse + functional level)
 
@@ -93,10 +94,35 @@ func compileCommand(_ path: String, output: String?) {
     }
 }
 
+func simCommand(_ pldPath: String, _ vecPath: String) {
+    guard let source = try? String(contentsOfFile: pldPath, encoding: .utf8) else {
+        print("error: cannot read \(pldPath)"); exit(1)
+    }
+    guard let script = try? String(contentsOfFile: vecPath, encoding: .utf8) else {
+        print("error: cannot read \(vecPath)"); exit(1)
+    }
+    do {
+        var design = try PLDParser.parse(source)
+        try SequenceLowering.lower(&design)
+        let compiled = try PLDCompiler.compile(source)
+        let report = try VectorScript.run(script: script, design: design, jed: compiled.jed)
+        for row in report.trace { print(row) }
+        if report.passed {
+            print("all expectations met")
+        } else {
+            for f in report.failures { print("FAIL: \(f)") }
+            exit(1)
+        }
+    } catch {
+        print("error: \(error)"); exit(1)
+    }
+}
+
 let args = Array(CommandLine.arguments.dropFirst())
 switch (args.first, args.count) {
 case ("compile", 2): compileCommand(args[1], output: nil)
 case ("compile", 3): compileCommand(args[1], output: args[2])
+case ("sim", 3): simCommand(args[1], args[2])
 case ("decode", 2): decodeCommand(args[1])
 case ("diff", 3): diffCommand(args[1], args[2])
 default: usage()
