@@ -19,7 +19,10 @@ Early development. Roadmap:
    GAL16V8 fuse map, golden-tested against WinCUPL and GALasm output
 3. **Registered outputs** (done) — `.d`/`.oe`/`.ar`/`.sp` extensions and a
    GAL22V10 fitter, golden-tested against the Multi IO card's WinCUPL image
-4. **State machines** — CUPL `FIELD` / `SEQUENCE` / `TABLE` support
+4. **State machines** (done) — CUPL `FIELD` and `SEQUENCE` (with IF/NEXT/
+   OUT/DEFAULT); Peter Schranz's original Multi IO glue PLD compiles
+   unmodified to a fuse map equivalent to the hardware image. `TABLE`
+   deferred until a design needs it
 5. **Verification** — exhaustive functional-equivalence checking between
    compiled output and reference fuse maps; simulation vectors
 

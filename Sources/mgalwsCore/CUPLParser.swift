@@ -35,11 +35,33 @@ public struct PLDEquation: Equatable, Sendable {
     public let expr: LogicExpr
 }
 
+public struct PLDSequence: Sendable {
+    public struct Transition: Sendable {
+        public let present: Int
+        public let condition: LogicExpr?    // nil for unconditional / DEFAULT
+        public let isDefault: Bool
+        public let next: Int
+        public let outs: [String]
+        public init(present: Int, condition: LogicExpr?, isDefault: Bool,
+                    next: Int, outs: [String]) {
+            self.present = present
+            self.condition = condition
+            self.isDefault = isDefault
+            self.next = next
+            self.outs = outs
+        }
+    }
+    public let field: String
+    public let transitions: [Transition]
+}
+
 public struct PLDDesign: Sendable {
     public var header: [String: String] = [:]   // lowercased keyword -> raw value
     public var device: String? { header["device"]?.uppercased() }
     public var pins: [PLDPin] = []
     public var equations: [PLDEquation] = []
+    public var fields: [String: [String]] = [:] // field name -> bit names, MSB first
+    public var sequences: [PLDSequence] = []
 }
 
 // MARK: - Lexer
@@ -164,6 +186,12 @@ public struct PLDParser {
             if lower == "pin" {
                 pos += 1
                 try parsePin(into: &design)
+            } else if lower == "field", !nextIsEquationIntro() {
+                pos += 1
+                try parseField(into: &design)
+            } else if lower == "sequence", !nextIsEquationIntro() {
+                pos += 1
+                try parseSequence(into: &design)
             } else if Self.headerKeywords.contains(lower), !nextIsEquationIntro() {
                 pos += 1
                 design.header[lower] = try rawValueUntilSemicolon()
@@ -209,6 +237,112 @@ public struct PLDParser {
         }
         try expectSym(";")
         design.pins.append(PLDPin(number: number, name: name, activeLow: activeLow))
+    }
+
+    /// FIELD name = [A..B] or [A, B, C]; ranges expand MSB-first.
+    private mutating func parseField(into design: inout PLDDesign) throws {
+        guard case .ident(let name)? = advance() else {
+            throw PLDParseError("expected field name", line: currentLine)
+        }
+        try expectSym("=")
+        try expectSym("[")
+        var bits: [String] = []
+        while true {
+            guard case .ident(let start)? = advance() else {
+                throw PLDParseError("expected signal name in field", line: currentLine)
+            }
+            if case .sym(".") = current, case .sym(".") = tokens[pos + 1].0 {
+                pos += 2
+                let endIndex: Int
+                switch advance() {
+                case .int(let n): endIndex = n
+                case .ident(let endName):
+                    let digits = endName.reversed().prefix(while: \.isNumber).reversed()
+                    guard let n = Int(String(digits)) else {
+                        throw PLDParseError("bad field range end \(endName)", line: currentLine)
+                    }
+                    endIndex = n
+                default:
+                    throw PLDParseError("expected field range end", line: currentLine)
+                }
+                let digits = String(start.reversed().prefix(while: \.isNumber).reversed())
+                guard let startIndex = Int(digits) else {
+                    throw PLDParseError("field range start \(start) has no index", line: currentLine)
+                }
+                let base = String(start.dropLast(digits.count))
+                let step = startIndex <= endIndex ? 1 : -1
+                var i = startIndex
+                while true {
+                    bits.append("\(base)\(i)")
+                    if i == endIndex { break }
+                    i += step
+                }
+            } else {
+                bits.append(start)
+            }
+            if case .sym(",") = current { pos += 1; continue }
+            break
+        }
+        try expectSym("]")
+        try expectSym(";")
+        design.fields[name] = bits
+    }
+
+    /// SEQUENCE field { PRESENT n [IF expr|DEFAULT] NEXT n [OUT sig]... ; ... }
+    private mutating func parseSequence(into design: inout PLDDesign) throws {
+        guard case .ident(let fieldName)? = advance() else {
+            throw PLDParseError("expected field name after SEQUENCE", line: currentLine)
+        }
+        try expectSym("{")
+        var transitions: [PLDSequence.Transition] = []
+        var present: Int? = nil
+        while true {
+            switch current {
+            case .sym("}"):
+                pos += 1
+                design.sequences.append(PLDSequence(field: fieldName, transitions: transitions))
+                return
+            case .ident(let word) where word.lowercased() == "present":
+                pos += 1
+                guard case .int(let state)? = advance() else {
+                    throw PLDParseError("expected state number after PRESENT", line: currentLine)
+                }
+                present = state
+            case .ident(let word) where ["if", "next", "default"].contains(word.lowercased()):
+                guard let from = present else {
+                    throw PLDParseError("transition before any PRESENT", line: currentLine)
+                }
+                var condition: LogicExpr? = nil
+                var isDefault = false
+                if word.lowercased() == "if" {
+                    pos += 1
+                    condition = try parseOr()
+                } else if word.lowercased() == "default" {
+                    pos += 1
+                    isDefault = true
+                }
+                guard case .ident(let kw)? = advance(), kw.lowercased() == "next" else {
+                    throw PLDParseError("expected NEXT", line: currentLine)
+                }
+                guard case .int(let next)? = advance() else {
+                    throw PLDParseError("expected state number after NEXT", line: currentLine)
+                }
+                var outs: [String] = []
+                while case .ident(let o) = current, o.lowercased() == "out" {
+                    pos += 1
+                    guard case .ident(let sig)? = advance() else {
+                        throw PLDParseError("expected signal after OUT", line: currentLine)
+                    }
+                    outs.append(sig)
+                }
+                try expectSym(";")
+                transitions.append(PLDSequence.Transition(
+                    present: from, condition: condition, isDefault: isDefault,
+                    next: next, outs: outs))
+            default:
+                throw PLDParseError("unexpected token in SEQUENCE block", line: currentLine)
+            }
+        }
     }
 
     private mutating func parseEquation(into design: inout PLDDesign) throws {

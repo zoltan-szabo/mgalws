@@ -3,6 +3,22 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Milestone 4 — FIELD and SEQUENCE state machines (2026-07-08)
+
+The parser accepts CUPL FIELD declarations ([PHI3..0] range and list
+forms, MSB first) and SEQUENCE blocks (PRESENT / IF / NEXT / OUT /
+DEFAULT). A lowering pass expands each transition into registered .D
+product terms: stateDecode(present) & condition, OR-ed into every field
+bit set in the next state and into every OUT signal. Unspecified states
+fall to state 0; DEFAULT takes the negated conjunction of its siblings'
+IF conditions. TABLE remains unimplemented until a design needs it.
+
+Golden test: Peter Schranz's original DCJ11SBC-W65C22S.PLD compiles
+unmodified and is functionally equivalent to the WinCUPL fuse map
+running in the Multi IO card on all ten pins (combinatorial pins
+fuse-identical, registered pins equivalent modulo term minimization).
+The SEQUENCE form and milestone 3's explicit .D form also agree.
+
 ## Milestone 3 — registered outputs and GAL22V10 fitter (2026-07-08)
 
 The compiler now targets the GAL22V10: combinational and registered

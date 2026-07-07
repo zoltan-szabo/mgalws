@@ -1,0 +1,173 @@
+Name      MULTIIO;
+Partno    GAL;
+Date      24/04/2025;
+Rev       02;
+Designer  cbscpe;
+Company   Netzwerk & Design GmbH;
+Assembly  None;
+Location  None;
+Device    G22V10;
+
+/*
+	This is the glue-logic used for the simple multi-IO card. The multi-IO
+	card comes with a second serial interface using again a DC319, a VAI
+	W65C22S and an EEPROM which can hold Boot ROM.
+
+	The multi-IO card is an expansion card for the DCJ11 SBC.
+
+	Before using this card you need to disconnect !IO from the Glue-Logic of
+	the DCJ11 SBC. This is either the GAL16V8 (U18) or the 74HCT139 (U14).
+	In either case it was recommended that you use sockets for these ICs and
+	thus you can just bend the !IO pin of the IC so that it does not make
+	contact when the IC is again inserted into the socket. This is because
+	the glue-logic of the multi-IO expansion card now provides the !IO signal
+	to select the on-board UART, which is no longer selected for the complete
+	IO-page.
+
+	W65C22S Interface Glue-Logic:
+
+	The W65C22N VIA has a synchronous bus and therfore we need to sychronize
+	access of the DCJ11 to PHI2 of the W65C22S.
+
+	NOTE: Typically the signal for the clock on the 65xx bus systems is
+	called PHI2. In this design PHI0 is actually the bus clock to be used
+	for the 65xx bus, this is due to the way WinCUPL uses arrays and how
+	GALs are assembled which will not allow renaming clocked outputs.
+
+	This GAL implements a state machine which counts the DCJ11 clock cycles.
+	The LSB of the state machine is used as clock of the W65C22. Clock half
+	cycles are numbered 0, 1, 2, .. to 9. Where PHI0 is low for even and
+	high for odd half cycles. !STRB is used to synchronise the PHI cycles to
+	the DCJ11 clock cycles. I.e. PHI cycle 0 always follows clock cycle T0
+	of the DCJ11.
+
+	During the second and third T4 of of the stretched DCJ11 CPU cycle the
+	65xx bus and the DCJ11 are in sync, therefore the W65C22S may be selected
+	during PHI0 clock phases 4 and 5, during which VIAACT is asserted.
+	
+	The falling edge of DV can be used to latch data into the DCJ11 before
+	the DCJ11 CPU Cycle ends. If DV is asserted during the whole DCJ11 CPU
+	cycle data is latched at the end of T5, but then the VIA is already no
+	longer selected. Therefore we de-assert DV when the IO-Page range for
+	the is selected and assert it only during VIAACT is asserted, creating
+	a falling edge at the end of the 65xx bus cycle that accesses the VIA.
+	
+	In all other cases we use the normal behaviour of the DCJ11 SBC and assert
+	DV during the complete cycles. Because if this logic inversion of normal
+	DV behaviour the DV output might use more product terms, make sure that
+	DV output is using one of the OLMC with many PT.
+	
+	Note that the VIA registers are addressed using A1, A2, A3 and A4 and
+	WEL is used as the RW signal of the 65xx bus. Therefore you need to 
+	double the address offset to access a given register.
+	
+	Addressing
+	
+	Note that we create the following addressing scheme in the IO-page
+	of the DCJ11
+	
+	177xxx	is used for the console
+	176xxx	is used for the second serial interface matching the standard
+		address for the first DLV11, 17650x
+	174xxx	is used for the W65C22S VIA
+	173xxx	BootROM
+	165xxx	BootROM
+	
+	Compile
+
+	.\cupl.bat Z:\DCJ11SBC\DCJ11SBC-W65C22S.PLD
+
+	Program
+	
+	minipro -p GAL22V10 -w DCJ11SBC-W65C22S.jed
+
+ */
+ 
+ 
+PIN         1 =  CLK;
+PIN         2 = !STRB;
+PIN         3 =  A9;
+PIN         4 =  A10;
+PIN         5 =  A11;
+PIN         6 =  A12;
+PIN         7 =  LAIO1;
+PIN         8 =  LAIO2; 
+PIN         9 =  LAIO3;
+PIN        10 =  LBS0;
+PIN        11 =  LBS1;
+
+PIN        13 =  LAIO0;
+PIN        14 =  PHI0;
+PIN        15 =  PHI1;
+PIN        16 =  PHI2;
+PIN        17 =  PHI3;
+PIN        18 =  VIAACT;
+PIN        19 =  DV;
+PIN        20 = !SLU;
+PIN        21 = !ROM;
+PIN        22 = !CON;
+PIN        23 = !VIA;
+
+FIELD PHI = [PHI3..0];
+
+PHI0.ar       = 'b'0;
+PHI1.ar       = 'b'0;
+PHI2.ar       = 'b'0;
+PHI3.ar       = 'b'0;
+VIAACT.ar     = 'b'0;
+
+PHI0.sp       = 'b'0;
+PHI1.sp       = 'b'0;
+PHI2.sp       = 'b'0;
+PHI3.sp       = 'b'0;
+VIAACT.sp     = 'b'0;
+
+
+SEQUENCE PHI {
+	PRESENT  0 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  1;
+
+	PRESENT  1 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  2;
+
+	PRESENT  2 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  3;
+
+	PRESENT  3 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  4  OUT  VIAACT;
+
+	PRESENT  4 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  5  OUT  VIAACT;
+
+	PRESENT  5 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  6;
+
+	PRESENT  6 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  7;
+
+	PRESENT  7 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  8;
+
+	PRESENT  8 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  9;
+
+	PRESENT  9 IF !STRB  NEXT  0;
+                   IF  STRB  NEXT  8;
+
+}
+
+DV            = !(LBS1 & !LBS0 &  A12 &  A11 & !A10 &  !A9)
+              #  (LBS1 & !LBS0 &  A12 &  A11 & !A10 &  !A9) &  VIAACT;
+
+VIA           =  LBS1 & !LBS0 &  A12 &  A11 & !A10 & !A9 &  VIAACT;
+
+CON           =  LBS1 & !LBS0 &  A12 &  A11 &  A10 &  A9;
+
+SLU           =  LBS1 & !LBS0 &  A12 &  A11 &  A10 & !A9;
+
+ROM           =  LBS1 & !LBS0 &  A12 & !A11 &  A10 &  A9
+              #  LBS1 & !LBS0 & !A12 &  A11 & !A10 &  A9;
+
+
+              
+

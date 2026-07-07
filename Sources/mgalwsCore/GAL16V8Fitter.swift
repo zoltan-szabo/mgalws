@@ -17,7 +17,8 @@ public struct CompiledPLD: Sendable {
 public enum PLDCompiler {
     /// Compile CUPL source text for a GAL16V8 or GAL22V10.
     public static func compile(_ source: String) throws -> CompiledPLD {
-        let design = try PLDParser.parse(source)
+        var design = try PLDParser.parse(source)
+        try SequenceLowering.lower(&design)
         guard let device = design.device else { throw FitError("no Device statement") }
         if device.hasPrefix("G16V8") {
             if design.equations.contains(where: { $0.ext == "D" }) {
