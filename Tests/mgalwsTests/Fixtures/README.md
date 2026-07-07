@@ -12,6 +12,7 @@ reader and GAL decoders:
 | `DCJ11SBC-W65C22S.jed` | GAL22V10 | Multi IO card glue logic (W65C22S VIA interface), WinCUPL |
 | `DCJ11SBC-V1-3-2.PLD` | CUPL source | SBC decoder, golden input for the mgalws compiler |
 | `DCJ11SBC-V1-3-3-IO-HIZ.PLD` | CUPL source | Local modification, see below |
+| `DCJ11SBC-W65C22S-EXPLICIT.PLD` | CUPL source | Multi IO glue with the SEQUENCE state machine rewritten as explicit .D equations (derived for mgalws testing) |
 
 `DCJ11SBC-V1-3-3-IO-HIZ.PLD` is a local modification by Zoltan Szabo
 (github.com/zoltan-szabo), not part of the original 5volts.ch distribution:

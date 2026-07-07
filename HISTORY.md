@@ -3,6 +3,21 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Milestone 3 — registered outputs and GAL22V10 fitter (2026-07-08)
+
+The compiler now targets the GAL22V10: combinational and registered
+(.D) outputs, per-pin .OE, global .AR/.SP product terms, per-OLMC
+polarity (S0) and mode (S1) bits, variable 8-16 term capacities, and
+the registered-feedback-is-Q-bar column mapping. Registered GAL16V8
+outputs remain unsupported (no golden reference to validate against).
+
+Golden test: DCJ11SBC-W65C22S-EXPLICIT.PLD expresses the Multi IO
+card's PHI/VIAACT state machine as explicit .D equations (extracted
+from the WinCUPL fuse map with mgalws decode). Compiling it reproduces
+the shipped JED functionally on all ten pins — nine are fuse-identical;
+DV differs only in term minimization. This also pre-derives exactly
+what milestone 4's SEQUENCE support must generate.
+
 ## Fixture corrections (2026-07-08)
 
 DCJ11SBC-V1-3-3-IO-HIZ.PLD (previously named DCJ11SBC-V1-3-3.PLD) is a

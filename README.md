@@ -17,7 +17,8 @@ Early development. Roadmap:
    decode GAL16V8/22V10 macrocell configuration back to equations
 2. **Equation compiler** (done) — CUPL-subset combinational equations to
    GAL16V8 fuse map, golden-tested against WinCUPL and GALasm output
-3. **Registered outputs** — `.d`/`.oe`/`.ar`/`.sp` extensions, GAL22V10 fitter
+3. **Registered outputs** (done) — `.d`/`.oe`/`.ar`/`.sp` extensions and a
+   GAL22V10 fitter, golden-tested against the Multi IO card's WinCUPL image
 4. **State machines** — CUPL `FIELD` / `SEQUENCE` / `TABLE` support
 5. **Verification** — exhaustive functional-equivalence checking between
    compiled output and reference fuse maps; simulation vectors

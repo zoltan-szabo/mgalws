@@ -15,15 +15,20 @@ public struct CompiledPLD: Sendable {
 }
 
 public enum PLDCompiler {
-    /// Compile CUPL source text. Currently supports the GAL16V8 (G16V8*).
+    /// Compile CUPL source text for a GAL16V8 or GAL22V10.
     public static func compile(_ source: String) throws -> CompiledPLD {
         let design = try PLDParser.parse(source)
         guard let device = design.device else { throw FitError("no Device statement") }
-        guard device.hasPrefix("G16V8") else {
-            throw FitError("device \(device) is not supported yet (GAL16V8 only)")
+        if device.hasPrefix("G16V8") {
+            if design.equations.contains(where: { $0.ext == "D" }) {
+                throw FitError("registered GAL16V8 outputs (.D) are not supported yet")
+            }
+            return CompiledPLD(deviceName: "GAL16V8", jed: try GAL16V8Fitter.fit(design))
         }
-        let jed = try GAL16V8Fitter.fit(design)
-        return CompiledPLD(deviceName: "GAL16V8", jed: jed)
+        if device.hasPrefix("G22V10") {
+            return CompiledPLD(deviceName: "GAL22V10", jed: try GAL22V10Fitter.fit(design))
+        }
+        throw FitError("device \(device) is not supported (GAL16V8, GAL22V10)")
     }
 }
 

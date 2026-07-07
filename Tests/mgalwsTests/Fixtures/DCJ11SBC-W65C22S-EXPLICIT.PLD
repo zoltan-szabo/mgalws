@@ -1,0 +1,79 @@
+Name      MULTIIO EXPLICIT;
+Partno    GAL;
+Date      08/07/2026;
+Rev       01;
+Designer  zoltan-szabo;
+Company   None;
+Assembly  None;
+Location  None;
+Device    G22V10;
+
+/*
+	mgalws test fixture, derived from the Multi IO card glue logic of
+	Peter Schranz's DCJ11 SBC project (https://www.5volts.ch/pages/dcj11sbc/).
+
+	The original DCJ11SBC-W65C22S.PLD expresses the PHI/VIAACT state
+	machine with a CUPL SEQUENCE block. This version replaces it with the
+	explicit registered transition equations extracted from the WinCUPL
+	fuse map, so that compiling this file must reproduce a fuse map
+	functionally identical to the original — the golden test for
+	registered-output support. Derivation by Zoltan Szabo for mgalws.
+ */
+
+PIN         1 =  CLK;
+PIN         2 = !STRB;
+PIN         3 =  A9;
+PIN         4 =  A10;
+PIN         5 =  A11;
+PIN         6 =  A12;
+PIN         7 =  LAIO1;
+PIN         8 =  LAIO2;
+PIN         9 =  LAIO3;
+PIN        10 =  LBS0;
+PIN        11 =  LBS1;
+PIN        13 =  LAIO0;
+
+PIN        14 =  PHI0;
+PIN        15 =  PHI1;
+PIN        16 =  PHI2;
+PIN        17 =  PHI3;
+PIN        18 =  VIAACT;
+PIN        19 =  DV;
+PIN        20 = !SLU;
+PIN        21 = !ROM;
+PIN        22 = !CON;
+PIN        23 = !VIA;
+
+/* state counter: 0..9 then 8/9 loop while STRB; reset to 0 without STRB */
+
+PHI0.d    =  STRB & !PHI3 & !PHI0
+          #  STRB & !PHI2 & !PHI1 & !PHI0;
+
+PHI1.d    =  STRB & !PHI3 &  PHI1 & !PHI0
+          #  STRB & !PHI3 & !PHI1 &  PHI0;
+
+PHI2.d    =  STRB & !PHI3 &  PHI2 & !PHI0
+          #  STRB & !PHI3 &  PHI2 & !PHI1
+          #  STRB & !PHI3 & !PHI2 &  PHI1 &  PHI0;
+
+PHI3.d    =  STRB &  PHI3 & !PHI2 & !PHI1
+          #  STRB & !PHI3 &  PHI2 &  PHI1 &  PHI0;
+
+/* asserted while entering states 4 and 5 */
+VIAACT.d  =  STRB & !PHI3 &  PHI2 & !PHI1 & !PHI0
+          #  STRB & !PHI3 & !PHI2 &  PHI1 &  PHI0;
+
+PHI0.ar   = 'b'0;
+PHI0.sp   = 'b'0;
+
+DV        = !(LBS1 & !LBS0 &  A12 &  A11 & !A10 & !A9)
+          #  (LBS1 & !LBS0 &  A12 &  A11 & !A10 & !A9) &  VIAACT;
+
+VIA       =  LBS1 & !LBS0 &  A12 &  A11 & !A10 & !A9 &  VIAACT;
+
+CON       =  LBS1 & !LBS0 &  A12 &  A11 &  A10 &  A9;
+
+SLU       =  LBS1 & !LBS0 &  A12 &  A11 &  A10 & !A9;
+
+ROM       =  LBS1 & !LBS0 &  A12 & !A11 &  A10 &  A9
+          #  LBS1 & !LBS0 & !A12 &  A11 & !A10 &  A9;

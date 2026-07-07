@@ -119,7 +119,7 @@ func fixtureText(_ name: String, ext: String) throws -> String {
 
 @Suite struct FitterErrors {
     @Test func rejectsUnknownDevice() {
-        let src = "Device G22V10; PIN 1 = A; PIN 14 = Q; Q = A;"
+        let src = "Device G20V8; PIN 2 = A; PIN 19 = Q; Q = A;"
         #expect(throws: FitError.self) { try PLDCompiler.compile(src) }
     }
 
