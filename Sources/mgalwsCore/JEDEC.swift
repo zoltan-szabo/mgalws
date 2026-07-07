@@ -95,9 +95,13 @@ public struct JEDECFile: Equatable, Sendable {
                          pinCount: pinCount, header: header)
     }
 
-    /// Serialize with 32-fuse L rows and a computed *C checksum.
+    /// Serialize with 32-fuse L rows, a computed *C fuse checksum, and the
+    /// full JESD3 STX/ETX framing with transmission checksum (the 16-bit sum
+    /// of every byte from STX through ETX inclusive) — required by minipro
+    /// and other programmer software.
     public func serialized() -> String {
-        var out = header.isEmpty ? "" : header + "\n"
+        var out = "\u{02}"
+        out += header.isEmpty ? "" : header + "\n"
         out += "\n"
         if let qp = pinCount { out += "*QP\(qp)\n" }
         out += "*QF\(fuseCount)\n*G0\n*F0\n"
@@ -108,7 +112,8 @@ public struct JEDECFile: Equatable, Sendable {
             addr += 32
         }
         out += String(format: "*C%04X\n", Int(computedFuseChecksum))
-        out += "*\n"
-        return out
+        out += "*\u{03}"
+        let transmission = out.utf8.reduce(UInt32(0)) { $0 &+ UInt32($1) } & 0xFFFF
+        return out + String(format: "%04X", transmission)
     }
 }

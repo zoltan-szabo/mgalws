@@ -32,6 +32,19 @@ func fixture(_ name: String) throws -> JEDECFile {
         }
     }
 
+    @Test func serializedHasJESD3Framing() throws {
+        // minipro requires STX/ETX framing with a transmission checksum.
+        let text = try fixture("DCJ11SBC-V1-3-2").serialized()
+        #expect(text.hasPrefix("\u{02}"))
+        let etxIndex = try #require(text.firstIndex(of: "\u{03}"))
+        let sumText = String(text[text.index(after: etxIndex)...])
+        #expect(sumText.count == 4)
+        let declared = try #require(UInt32(sumText, radix: 16))
+        let covered = text[...etxIndex]
+        let computed = covered.utf8.reduce(UInt32(0)) { $0 &+ UInt32($1) } & 0xFFFF
+        #expect(computed == declared)
+    }
+
     @Test func serializeRoundTrip() throws {
         for name in ["DCJ11SBC-V1-3-2", "DCJ11SBC-W65C22S"] {
             let original = try fixture(name)

@@ -3,6 +3,14 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## JED framing fix (2026-07-08)
+
+First real-world programming attempt: minipro rejected mgalws output
+with "JED file format error!". Cause: serialized files lacked the JESD3
+STX/ETX envelope and transmission checksum (16-bit sum of all bytes
+from STX through ETX inclusive) that WinCUPL and GALasm emit and
+minipro requires. serialized() now produces the full framing.
+
 ## Milestone 4 — FIELD and SEQUENCE state machines (2026-07-08)
 
 The parser accepts CUPL FIELD declarations ([PHI3..0] range and list
