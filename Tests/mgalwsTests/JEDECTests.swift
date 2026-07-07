@@ -3,10 +3,9 @@ import Testing
 @testable import mgalwsCore
 
 // Fixture fuse maps are from Peter Schranz's DCJ11 SBC project
-// (https://www.5volts.ch/pages/dcj11sbc/), except DCJ11SBC-V1-3-3-IO-HIZ.PLD,
-// a local modification — see Fixtures/README.md. Expected values below
-// were verified against the original WinCUPL .PLD sources and by
-// fuse-level analysis of the shipped JEDs.
+// (https://www.5volts.ch/pages/dcj11sbc/) — see Fixtures/README.md.
+// Expected values below were verified against the original WinCUPL .PLD
+// sources and by fuse-level analysis of the shipped JEDs.
 
 func fixture(_ name: String) throws -> JEDECFile {
     let url = Bundle.module.url(forResource: "Fixtures/\(name)", withExtension: "jed")!
