@@ -20,7 +20,8 @@ let package = Package(
         .testTarget(
             name: "mgalwsTests",
             dependencies: ["mgalwsCore"],
-            path: "Tests/mgalwsTests"
+            path: "Tests/mgalwsTests",
+            resources: [.copy("Fixtures")]
         ),
     ]
 )
