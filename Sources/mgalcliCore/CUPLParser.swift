@@ -1,4 +1,4 @@
-// CUPLParser.swift — lexer and parser for the CUPL subset mgalws supports
+// CUPLParser.swift — lexer and parser for the CUPL subset mgalcli supports
 //
 // Milestone 2 subset: header statements, PIN declarations (with active-low
 // `!name`), and combinational equations `target[.ext] = expr;` where expr

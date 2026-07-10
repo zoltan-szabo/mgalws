@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import mgalwsCore
+@testable import mgalcliCore
 
 // Milestone 4 golden test: Peter Schranz's original DCJ11SBC-W65C22S.PLD —
 // FIELD, SEQUENCE, .AR/.SP and all — compiles to a fuse map functionally
@@ -40,6 +40,19 @@ import Testing
             #expect(pin.oeEquivalent, "pin \(pin.pin) OE differs from WinCUPL")
         }
         #expect(diff.isFunctionallyEquivalent)
+    }
+
+    @Test func compilationIsReproducible() throws {
+        // Swift randomizes Dictionary iteration order per process, so state
+        // grouping must be sorted: the same source has to yield the same
+        // fuse map on every run, or burned artifacts cannot be diffed.
+        let source = try fixtureText("DCJ11SBC-W65C22S", ext: "PLD")
+        let first = try PLDCompiler.compile(source).jed
+        for _ in 0 ..< 5 {
+            let again = try PLDCompiler.compile(source).jed
+            #expect(again.fuses == first.fuses)
+            #expect(again.computedFuseChecksum == first.computedFuseChecksum)
+        }
     }
 
     @Test func sequenceAndExplicitFormsAgree() throws {

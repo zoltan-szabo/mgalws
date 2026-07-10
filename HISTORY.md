@@ -3,9 +3,30 @@
 Detailed notes per milestone. Commit messages stay short; the long story
 lives here.
 
+## Renamed to mgalcli, and a determinism fix (2026-07-10)
+
+The project and its tool were renamed from `mgalws` (Mac GAL WorkShop)
+to `mgalcli` — GAL command-line tool for macOS. The GitHub repository
+was renamed too; GitHub keeps a permanent redirect from the old name.
+
+The rename surfaced a real bug. Compiling the same PLD twice produced
+different fuse maps: `SequenceLowering` iterated a grouped `Dictionary`,
+and Swift randomizes dictionary iteration order per process, so each
+state's product terms landed in different AND-array rows on every run.
+The outputs were always functionally equivalent — every pin, every
+equation — which is why the golden tests never caught it, but artifacts
+that get burned into chips and diffed against each other must be
+reproducible. States are now iterated in sorted order, and a test
+compiles one source six times and asserts identical fuse maps.
+
+Consequence for existing hardware: the V3/V4 images in the private
+hardware repo were regenerated and are no longer byte-identical to what
+is burned in the GALs (rows moved). They remain functionally equivalent
+on every pin, so no re-burn is needed.
+
 ## Milestone 5 — cycle-level simulation (2026-07-08)
 
-`mgalws sim design.pld script.vec` simulates a compiled design against a
+`mgalcli sim design.pld script.vec` simulates a compiled design against a
 line-oriented vector script (watch / set / clock / show / expect; levels
 are pin voltages, expectations accept 0/1/Z). The simulator executes
 decoded fuse maps directly: GAL22V10 with registered OLMCs (Q-bar
@@ -19,7 +40,7 @@ Golden vectors: W65C22S-statemachine.vec drives the Multi IO glue
 through a full stretched bus cycle (count 0-9, park 8/9, STRB reset,
 VIAACT window at states 4-5, VIA select, DV falling edge, console
 decode) and passes against both the WinCUPL fuse map running in real
-hardware and the mgalws-compiled equivalent.
+hardware and the mgalcli-compiled equivalent.
 
 ## Fixture cleanup (2026-07-08)
 
@@ -47,7 +68,7 @@ WinCUPL image). Fixture: DCJ11SBC-V1-3-2-IO-INPUT.PLD.
 
 ## JED framing fix (2026-07-08)
 
-First real-world programming attempt: minipro rejected mgalws output
+First real-world programming attempt: minipro rejected mgalcli output
 with "JED file format error!". Cause: serialized files lacked the JESD3
 STX/ETX envelope and transmission checksum (16-bit sum of all bytes
 from STX through ETX inclusive) that WinCUPL and GALasm emit and
@@ -79,7 +100,7 @@ outputs remain unsupported (no golden reference to validate against).
 
 Golden test: DCJ11SBC-W65C22S-EXPLICIT.PLD expresses the Multi IO
 card's PHI/VIAACT state machine as explicit .D equations (extracted
-from the WinCUPL fuse map with mgalws decode). Compiling it reproduces
+from the WinCUPL fuse map with mgalcli decode). Compiling it reproduces
 the shipped JED functionally on all ten pins — nine are fuse-identical;
 DV differs only in term minimization. This also pre-derives exactly
 what milestone 4's SEQUENCE support must generate.
@@ -97,7 +118,7 @@ WinCUPL-built V1-3-2 golden image on all other pins.
 
 ## Milestone 2 — CUPL equation compiler (2026-07-07)
 
-`mgalws compile file.pld [out.jed]` compiles a CUPL subset to a GAL16V8
+`mgalcli compile file.pld [out.jed]` compiles a CUPL subset to a GAL16V8
 fuse map:
 
 - Lexer/parser: header statements, PIN declarations (active-low `!name`),
@@ -117,7 +138,7 @@ modification exercises .OE support and complex-mode fitting.
 
 ## Milestone 1 — JEDEC toolkit (2026-07-07)
 
-`mgalws decode file.jed` and `mgalws diff a.jed b.jed`:
+`mgalcli decode file.jed` and `mgalcli diff a.jed b.jed`:
 
 - JESD3 parser/serializer: `*QF/*QP/*F/*L/*C` fields, STX/ETX framing,
   CRLF tolerance, LSB-first fuse checksum verified against WinCUPL's
@@ -132,4 +153,4 @@ modification exercises .OE support and complex-mode fitting.
   identical, functionally equivalent (exhaustive over used inputs).
 
 Test fixtures are fuse maps from Peter Schranz's DCJ11 SBC project
-(https://www.5volts.ch/pages/dcj11sbc/), see Tests/mgalwsTests/Fixtures.
+(https://www.5volts.ch/pages/dcj11sbc/), see Tests/mgalcliTests/Fixtures.

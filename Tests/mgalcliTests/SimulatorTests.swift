@@ -1,12 +1,12 @@
 import Foundation
 import Testing
-@testable import mgalwsCore
+@testable import mgalcliCore
 
 // Milestone 5: cycle-level simulation. The vector fixture drives the Multi
 // IO state machine through a full stretched bus cycle and checks the
 // VIAACT window, VIA select, DV handshake and console decode — against
 // both the WinCUPL fuse map running in real hardware and the
-// mgalws-compiled equivalent.
+// mgalcli-compiled equivalent.
 
 @Suite struct VectorGolden {
     func design() throws -> PLDDesign {

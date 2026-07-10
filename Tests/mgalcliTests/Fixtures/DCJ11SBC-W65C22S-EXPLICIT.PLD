@@ -9,7 +9,7 @@ Location  None;
 Device    G22V10;
 
 /*
-	mgalws test fixture, derived from the Multi IO card glue logic of
+	mgalcli test fixture, derived from the Multi IO card glue logic of
 	Peter Schranz's DCJ11 SBC project (https://www.5volts.ch/pages/dcj11sbc/).
 
 	The original DCJ11SBC-W65C22S.PLD expresses the PHI/VIAACT state
@@ -17,7 +17,7 @@ Device    G22V10;
 	explicit registered transition equations extracted from the WinCUPL
 	fuse map, so that compiling this file must reproduce a fuse map
 	functionally identical to the original — the golden test for
-	registered-output support. Derivation by Zoltan Szabo for mgalws.
+	registered-output support. Derivation by Zoltan Szabo for mgalcli.
  */
 
 PIN         1 =  CLK;

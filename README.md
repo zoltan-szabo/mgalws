@@ -1,4 +1,4 @@
-# mgalws — Mac GAL WorkShop
+# mgalcli — GAL command-line tool for macOS
 
 A native macOS toolchain for GAL programmable logic devices (GAL16V8, GAL22V10),
 written in Swift. Compiles CUPL `.PLD` sources to JEDEC fuse maps — no Wine, no
@@ -27,7 +27,7 @@ Early development. Roadmap:
    unmodified to a fuse map equivalent to the hardware image. `TABLE`
    deferred until a design needs it
 5. **Verification** (done) — functional-equivalence diffing (part of the
-   JED toolkit) plus cycle-level simulation: `mgalws sim design.pld
+   JED toolkit) plus cycle-level simulation: `mgalcli sim design.pld
    script.vec` drives a design through clocked vector scripts with
    watch/set/clock/expect commands, covering registered state machines,
    output enables and polarities before any chip is programmed

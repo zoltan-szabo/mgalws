@@ -161,6 +161,6 @@ public enum GAL22V10Fitter {
 
         return JEDECFile(fuseCount: GAL22V10.fuseCount, fuses: fuses,
                          pinCount: 24,
-                         header: "compiled by mgalws")
+                         header: "compiled by mgalcli")
     }
 }

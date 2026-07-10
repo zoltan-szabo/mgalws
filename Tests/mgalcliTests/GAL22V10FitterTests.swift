@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import mgalwsCore
+@testable import mgalcliCore
 
 // Milestone 3 golden test: DCJ11SBC-W65C22S-EXPLICIT.PLD carries the state
 // machine of Peter Schranz's Multi IO glue logic as explicit .D equations

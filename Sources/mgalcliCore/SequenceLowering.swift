@@ -30,7 +30,12 @@ public enum SequenceLowering {
 
             var dTerms: [String: [LogicExpr]] = [:]
             let byPresent = Dictionary(grouping: seq.transitions, by: \.present)
-            for (present, transitions) in byPresent {
+            // Sort the states: Swift randomizes Dictionary iteration order per
+            // process, and the order decides which product term lands in which
+            // AND-array row. Without this the same source compiles to a
+            // different (though equivalent) fuse map on every run.
+            for present in byPresent.keys.sorted() {
+                let transitions = byPresent[present]!
                 guard present < stateLimit else {
                     throw FitError("SEQUENCE \(seq.field): state \(present) exceeds field width")
                 }

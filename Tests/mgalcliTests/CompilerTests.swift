@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import mgalwsCore
+@testable import mgalcliCore
 
 // Golden tests: compile the V1-3-2 PLD source by Peter Schranz and prove
 // functional equivalence with the WinCUPL 5.0a fuse map running in real

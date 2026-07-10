@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import mgalwsCore
+@testable import mgalcliCore
 
 // Fixture fuse maps are from Peter Schranz's DCJ11 SBC project
 // (https://www.5volts.ch/pages/dcj11sbc/) — see Fixtures/README.md.
@@ -87,7 +87,7 @@ func fixture(_ name: String) throws -> JEDECFile {
 @Suite struct GAL16V8Diffing {
     @Test func winCUPLGoldenVersusCompiledIOInput() throws {
         // The WinCUPL-built V1-3-2 (runs in real hardware) against the
-        // mgalws-compiled IO-INPUT variant (also hardware-verified):
+        // mgalcli-compiled IO-INPUT variant (also hardware-verified):
         // everything equivalent except pin 18, which became an input.
         let compiled = try PLDCompiler.compile(
             try fixtureText("DCJ11SBC-V1-3-2-IO-INPUT", ext: "PLD")).jed

@@ -1,17 +1,17 @@
-// mgalws — Mac GAL WorkShop CLI
+// mgalcli — GAL command-line tool for macOS
 
 import Foundation
-import mgalwsCore
+import mgalcliCore
 
 func usage() -> Never {
     print("""
-    mgalws — Mac GAL WorkShop
+    mgalcli — GAL command-line tool for macOS
 
     USAGE:
-      mgalws compile <file.pld> [out.jed] Compile CUPL equations to a JEDEC fuse map
-      mgalws sim <file.pld> <script.vec>  Simulate a design against a vector script
-      mgalws decode <file.jed>            Decode a GAL16V8/22V10 fuse map to equations
-      mgalws diff <a.jed> <b.jed>         Compare two fuse maps (fuse + functional level)
+      mgalcli compile <file.pld> [out.jed] Compile CUPL equations to a JEDEC fuse map
+      mgalcli sim <file.pld> <script.vec>  Simulate a design against a vector script
+      mgalcli decode <file.jed>            Decode a GAL16V8/22V10 fuse map to equations
+      mgalcli diff <a.jed> <b.jed>         Compare two fuse maps (fuse + functional level)
 
     Device is detected from the fuse count (QF2194 = GAL16V8, QF5892 = GAL22V10).
     """)

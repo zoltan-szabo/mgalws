@@ -3,24 +3,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "mgalws",
+    name: "mgalcli",
     products: [
-        .library(name: "mgalwsCore", targets: ["mgalwsCore"]),
+        .library(name: "mgalcliCore", targets: ["mgalcliCore"]),
     ],
     targets: [
         .executableTarget(
-            name: "mgalws",
-            dependencies: ["mgalwsCore"],
-            path: "Sources/mgalws"
+            name: "mgalcli",
+            dependencies: ["mgalcliCore"],
+            path: "Sources/mgalcli"
         ),
         .target(
-            name: "mgalwsCore",
-            path: "Sources/mgalwsCore"
+            name: "mgalcliCore",
+            path: "Sources/mgalcliCore"
         ),
         .testTarget(
-            name: "mgalwsTests",
-            dependencies: ["mgalwsCore"],
-            path: "Tests/mgalwsTests",
+            name: "mgalcliTests",
+            dependencies: ["mgalcliCore"],
+            path: "Tests/mgalcliTests",
             resources: [.copy("Fixtures")]
         ),
     ]

@@ -3,7 +3,7 @@
 Most files here are from the **DCJ11 Single Board Computer** and
 **DCJ11 Multi IO card** projects by **Peter Schranz** —
 https://www.5volts.ch/pages/dcj11sbc/ — included, with attribution, as
-reference test vectors for mgalws.
+reference test vectors for mgalcli.
 
 ## SBC decoder GAL (GAL16V8)
 
@@ -32,5 +32,5 @@ by inline test sources.
 |---|---|
 | `DCJ11SBC-W65C22S.PLD` | Original glue-logic source with SEQUENCE state machine (Peter Schranz) |
 | `DCJ11SBC-W65C22S.jed` | WinCUPL build of it — runs in real hardware |
-| `DCJ11SBC-W65C22S-EXPLICIT.PLD` | Same design with the SEQUENCE rewritten as explicit .D equations (derived for mgalws testing by Zoltan Szabo) |
-| `W65C22S-statemachine.vec` | Sequential golden vectors for the state machine (written for mgalws by Zoltan Szabo) |
+| `DCJ11SBC-W65C22S-EXPLICIT.PLD` | Same design with the SEQUENCE rewritten as explicit .D equations (derived for mgalcli testing by Zoltan Szabo) |
+| `W65C22S-statemachine.vec` | Sequential golden vectors for the state machine (written for mgalcli by Zoltan Szabo) |
